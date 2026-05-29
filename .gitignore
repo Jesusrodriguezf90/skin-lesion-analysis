@@ -1,0 +1,41 @@
+# Variables de entorno — nunca subir al repositorio
+.env
+
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Dataset ISIC 2018 — imágenes no distribuibles
+data/
+
+# Modelos entrenados — artefactos pesados
+models/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# VS Code — configuración personal del desarrollador
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/

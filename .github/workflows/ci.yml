@@ -1,0 +1,50 @@
+name: CI — Skin Lesion Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  tests:
+    name: Tests unitarios
+    runs-on: ubuntu-latest
+    # Forzar Node.js 24 para evitar el warning de deprecación de Node.js 20
+    # GitHub Actions eliminará Node.js 20 el 16 de septiembre de 2026
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install pytest
+          # Build CPU-only — los tests no necesitan GPU y la build completa pesa ~2GB
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install \
+            segmentation-models-pytorch \
+            timm \
+            albumentations \
+            numpy \
+            Pillow \
+            opencv-python-headless \
+            scikit-learn \
+            python-dotenv \
+            huggingface_hub
+
+      - name: Ejecutar tests unitarios
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pytest tests/ -v --tb=short
