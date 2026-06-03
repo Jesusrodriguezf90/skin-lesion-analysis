@@ -2,7 +2,7 @@ name: CI — Skin Lesion Analysis
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/* ]
   pull_request:
     branches: [ main ]
 

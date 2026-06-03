@@ -123,6 +123,13 @@ skin-lesion-analysis/
 │       ├── metrics.py           # Dice, IoU, AUC, F1
 │       └── visualization.py    # Visualización de máscaras y predicciones
 │
+├── data/
+│   ├── raw/
+│   │   ├── ISIC2018_Task1_Training_Input/        # 2.594 imágenes .jpg (excluidas de Git)
+│   │   ├── ISIC2018_Task1_Training_GroundTruth/  # 2.594 máscaras .png (excluidas de Git)
+│   │   └── ISIC2018_Task3_Training_GroundTruth.csv  # Etiquetas de clasificación
+│   └── processed/               # Artefactos generados por los notebooks (excluidos de Git)
+│
 ├── app/
 │   └── app.py                   # Demo Gradio en HF Spaces
 │
@@ -173,11 +180,21 @@ source venv/bin/activate        # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Descarga del dataset
+
+El pipeline requiere dos fuentes del ISIC 2018:
+
+- **Task 1** (imágenes + máscaras de segmentación): [kaggle.com/datasets/tschandl/isic2018-challenge-task1-data-segmentation](https://www.kaggle.com/datasets/tschandl/isic2018-challenge-task1-data-segmentation)
+- **Task 3** (CSV de etiquetas de clasificación): [kaggle.com/datasets/hitman1309/isic-2018-task-3](https://www.kaggle.com/datasets/hitman1309/isic-2018-task-3)
+
+> **Por qué dos fuentes distintas:** el challenge ISIC 2018 está dividido en tareas independientes. Task 1 proporciona 2.594 imágenes con máscaras de segmentación píxel a píxel. Task 3 proporciona 10.015 imágenes con etiquetas de clasificación. Los conjuntos se solapan parcialmente — las 2.594 imágenes de Task 1 son un subconjunto de Task 3 y todas tienen etiqueta de clasificación asociada. El pipeline usa únicamente las imágenes de Task 1 (las únicas con máscara), completadas con las etiquetas del CSV de Task 3. Esto garantiza que cada muestra tiene imagen, máscara y etiqueta — los tres elementos necesarios para el pipeline de dos etapas.
+
+Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura indicada en la sección anterior.
+
 ### Entrenamiento en Kaggle
 
-1. Descarga el dataset ISIC 2018 desde [challenge.isic-archive.com](https://challenge.isic-archive.com/data/#2018)
-2. Sube el dataset a Kaggle como dataset privado
-3. Ejecuta los notebooks en orden: `01_eda` → `02_segmentation` → `03_classification` → `04_evaluation`
+1. Sube la carpeta `data/raw/` a Kaggle como dataset privado
+2. Ejecuta los notebooks en orden: `01_eda` → `02_segmentation` → `03_classification` → `04_evaluation`
 
 ---
 
@@ -202,11 +219,11 @@ pip install -r requirements.txt
 International Skin Imaging Collaboration (ISIC)  
 🔗 https://challenge.isic-archive.com/data/#2018
 
-| Split | Imágenes | Máscaras |
-|---|---|---|
-| Entrenamiento | 2,594 | ✅ |
-| Validación | 100 | ❌ |
-| Test | 1,000 | ❌ |
+| Split | Imágenes | Máscaras | Etiquetas |
+|---|---|---|---|
+| Entrenamiento (Task 1) | 2.594 | ✅ | ✅ (vía Task 3 CSV) |
+| Validación | 100 | ❌ | ❌ |
+| Test | 1.000 | ❌ | ❌ |
 
 **Categorías (Task 3):** Melanoma · Melanocytic nevus · Basal cell carcinoma · Actinic keratosis · Benign keratosis · Dermatofibroma · Vascular lesion
 
@@ -235,6 +252,7 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 - El modelo está entrenado con imágenes **dermoscópicas estándar** capturadas con dermatoscopio — no es aplicable a fotografías clínicas convencionales ni fotos de smartphone sin dermatoscopio
 - La escala física de la lesión en milímetros no se usa como feature — el modelo aprende patrones de textura, color y forma relativos a la imagen
 - El dataset ISIC 2018 está desbalanceado — la clase melanoma es minoría respecto a nevus melanocítico
+- El pipeline completo (segmentación + clasificación) requiere que cada muestra tenga máscara de segmentación disponible — las 2.594 imágenes de Task 1 son las únicas que cumplen esta condición
 
 ---
 
