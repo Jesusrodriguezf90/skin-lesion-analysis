@@ -38,10 +38,10 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 > Las funcionalidades marcadas con 🔲 están especificadas y pendientes de implementación.
 
 - ✅ Exploración y análisis del dataset ISIC 2018 (notebook 01_eda)
-- 🔲 Segmentación de lesiones con U-Net/ResNet34 y métricas Dice e IoU (notebook 02_segmentation)
+- ✅ Segmentación de lesiones con U-Net/ResNet34 y métricas Dice e IoU (notebook 02_segmentation)
 - 🔲 Clasificación multi-clase con EfficientNet-B0 sobre región segmentada (notebook 03_classification)
 - 🔲 Evaluación comparativa con métricas AUC, F1 y análisis de errores (notebook 04_evaluation)
-- 🔲 Publicación de modelos en HF Hub
+- ✅ Publicación de modelos en HF Hub
 - 🔲 Demo Gradio en HF Spaces
 
 ---
@@ -50,7 +50,7 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│              Imagen dermoscópica (224×224)                   │
+│              Imagen dermoscópica (256×256)                   │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
@@ -80,16 +80,18 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 └─────────────────────────────────────────────────────────────┘
 ```
 
+> **Resolución de entrada 256×256:** compromiso entre detalle preservado y memoria GPU disponible en T4. Las imágenes originales de ISIC 2018 tienen una resolución media de ~3089×2111px — reducir a 224×224 supone un factor de compresión de ~14x que pierde detalle en bordes finos de lesión. 512×512 obliga a batch size ≤4, alargando el entrenamiento sin mejora proporcional con 2.594 imágenes. 256×256 es el compromiso estándar en la literatura para este dataset con encoders preentrenados.
+
 ---
 
 ## Stack Tecnológico
 
 | Componente | Herramienta | Propósito |
 |---|---|---|
-| Framework DL | [PyTorch](https://pytorch.org/) | Entrenamiento y inferencia de modelos |
+| Framework DL | [PyTorch](https://pytorch.org/) | Entrenamiento e inferencia de modelos |
 | Segmentación | [segmentation-models-pytorch](https://github.com/qubvel/segmentation_models.pytorch) | U-Net con encoder ResNet34 preentrenado |
 | Clasificación | [timm](https://github.com/huggingface/pytorch-image-models) | EfficientNet-B0 con transfer learning |
-| Augmentación | [Albumentations](https://albumentations.ai/) | Augmentación de imágenes médicas |
+| Data augmentation | [Albumentations](https://albumentations.ai/) | Data augmentation de imágenes médicas |
 | Entrenamiento | [Kaggle Notebooks](https://www.kaggle.com/code) | GPU T4 gratuita para entrenamiento |
 | Demo | [Gradio](https://gradio.app/) + [HF Spaces](https://huggingface.co/spaces) | Interfaz interactiva pública |
 | CI/CD | [GitHub Actions](https://github.com/features/actions) | Tests automáticos en cada push |
@@ -115,7 +117,7 @@ skin-lesion-analysis/
 │   ├── data/
 │   │   ├── __init__.py
 │   │   ├── dataset.py            # PyTorch Dataset para ISIC 2018
-│   │   └── transforms.py        # Augmentación de imágenes médicas
+│   │   └── transforms.py        # Data augmentation de imágenes médicas
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── segmentation.py      # U-Net con ResNet34 encoder
@@ -197,7 +199,8 @@ Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura 
 ### Entrenamiento en Kaggle
 
 1. Sube los datasets a Kaggle como dataset privado
-2. Ejecuta los notebooks en orden: `01_eda` → `02_segmentation` → `03_classification` → `04_evaluation`
+2. Añade `HF_TOKEN` en Kaggle → Add-ons → Secrets
+3. Ejecuta los notebooks en orden: `01_eda` → `02_segmentation` → `03_classification` → `04_evaluation`
 
 ---
 
@@ -205,12 +208,12 @@ Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura 
 
 | Tarea | Métrica | Valor |
 |---|---|---|
-| Segmentación | Dice | — |
-| Segmentación | IoU (Jaccard) | — |
+| Segmentación | Dice | **0.8982** |
+| Segmentación | IoU (Jaccard) | **0.8293** |
 | Clasificación | AUC | — |
 | Clasificación | F1 (macro) | — |
 
-*Resultados pendientes de entrenamiento completo.*
+> **Segmentación:** U-Net/ResNet34 entrenado con split 80/20, loss Dice+BCE, AdamW lr=1e-4, early stopping paciencia=5. Convergencia en época 7, early stopping en época 12. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/unet-resnet34-isic2018-segmentation).
 
 ---
 
@@ -243,10 +246,11 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 |---|---|
 | ✅ | Estructura del proyecto y documentación |
 | ✅ | Exploración del dataset (notebook 01_eda) |
-| 🔲 | Segmentación U-Net (notebook 02_segmentation) |
+| ✅ | Segmentación U-Net (notebook 02_segmentation) |
+| ✅ | Publicación del modelo de segmentación en HF Hub |
 | 🔲 | Clasificación EfficientNet (notebook 03_classification) |
 | 🔲 | Evaluación comparativa (notebook 04_evaluation) |
-| 🔲 | Publicación de modelos en HF Hub |
+| 🔲 | Publicación del modelo de clasificación en HF Hub |
 | 🔲 | Demo Gradio en HF Spaces |
 
 ---
