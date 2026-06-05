@@ -40,7 +40,7 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 - ✅ Exploración y análisis del dataset ISIC 2018 (notebook 01_eda)
 - ✅ Segmentación de lesiones con U-Net/ResNet34 y métricas Dice e IoU (notebook 02_segmentation)
 - ✅ Clasificación multi-clase con EfficientNet-B0 con fine-tuning progresivo (notebook 03_classification)
-- 🔲 Evaluación del pipeline completo con métricas conjuntas (notebook 04_evaluation)
+- ✅ Evaluación del pipeline completo con análisis crítico (notebook 04_evaluation)
 - ✅ Publicación de modelos en HF Hub
 - 🔲 Demo Gradio en HF Spaces
 
@@ -217,6 +217,18 @@ Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura 
 
 > **Clasificación:** EfficientNet-B0 entrenado con fine-tuning progresivo (5 épocas encoder congelado + 30 descongelado), WeightedRandomSampler + CrossEntropyLoss con pesos de clase para gestionar el desbalance severo (ratio 58.3x). Tres experimentos realizados — la configuración final usa `epochs_unfrozen=30` sin dropout adicional ni label smoothing, que demostró mejor generalización. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/efficientnet-b0-isic2018-classification).
 
+### Evaluación del pipeline completo
+
+La evaluación encadena U-Net → EfficientNet sobre las 10.015 imágenes de HAM10000 usando pseudo-máscaras generadas por U-Net. Se comparan dos modos:
+
+| Modo | F1 macro | AUC macro |
+|---|---|---|
+| A — sin segmentación (imagen completa) | 0.8411 | 0.9920 |
+| B — con pseudo-máscara U-Net (pipeline real) | 0.3554 | 0.8288 |
+| **ΔB - A** | **-0.4858** | **-0.1632** |
+
+> **Análisis crítico:** la segmentación previa degrada el rendimiento del clasificador. Hay dos causas identificadas. Primera: *distribution shift* — U-Net se entrenó con las imágenes de Task 1 y genera pseudo-máscaras sobre Task 3, una distribución que no vio durante el entrenamiento, resultando en máscaras de menor calidad. Segunda: EfficientNet aprendió a clasificar usando también el contexto de piel sana circundante — eliminarlo con la máscara destruye información diagnóstica relevante. Este resultado es consistente con Hasan et al. (2020), que reporta que eliminar completamente el fondo degrada el rendimiento de clasificación. La clase más perjudicada es DF (dermatofibroma, Δ-0.635) por ser una lesión pequeña donde el contexto circundante es especialmente relevante.
+
 ---
 
 ## Proceso experimental — Clasificación
@@ -244,7 +256,7 @@ International Skin Imaging Collaboration (ISIC)
 | Dataset | Imágenes | Máscaras | Etiquetas | Uso |
 |---|---|---|---|---|
 | Task 1 (entrenamiento) | 2.594 | ✅ | ❌ | Entrena U-Net |
-| Task 3 / HAM10000 | 10.015 | ❌ | ✅ | Entrena EfficientNet |
+| Task 3 / HAM10000 | 10.015 | ❌ | ✅ | Entrena EfficientNet + evaluación pipeline |
 | Task 1 (validación) | 100 | ❌ | ❌ | — |
 | Task 1 (test) | 1.000 | ❌ | ❌ | — |
 
@@ -266,7 +278,7 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 | ✅ | Publicación del modelo de segmentación en HF Hub |
 | ✅ | Clasificación EfficientNet (notebook 03_classification) |
 | ✅ | Publicación del modelo de clasificación en HF Hub |
-| 🔲 | Evaluación del pipeline completo (notebook 04_evaluation) |
+| ✅ | Evaluación del pipeline completo (notebook 04_evaluation) |
 | 🔲 | Demo Gradio en HF Spaces |
 
 ---
@@ -277,8 +289,9 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 - La escala física de la lesión en milímetros no se usa como feature — el modelo aprende patrones de textura, color y forma relativos a la imagen
 - El dataset ISIC 2018 está fuertemente desbalanceado — NV (nevus) representa el 66.9% de Task 3, mientras que DF (dermatofibroma) es solo el 1.1%
 - Task 1 y Task 3 son conjuntos disjuntos — U-Net y EfficientNet se entrenan con datos independientes sin solapamiento
-- La evaluación del pipeline completo (U-Net → EfficientNet encadenados) se realiza sobre el set de validación de Task 1, que U-Net ya vio durante el entrenamiento — no existe un dataset externo con imagen + máscara + etiqueta de las 7 clases fuera de ISIC 2018
-- MEL (melanoma) presenta precision 0.40 con recall 0.82 — el modelo genera falsos positivos de melanoma, comportamiento clínicamente aceptable (mejor sobrediagnosticar) pero que refleja la dificultad de distinguir melanoma de nevus en imágenes ambiguas
+- La evaluación del pipeline encadenado usa pseudo-máscaras de U-Net sobre Task 3 — U-Net fue entrenado con Task 1, por lo que existe distribution shift entre los datos de entrenamiento de segmentación y los de evaluación
+- MEL (melanoma) presenta precision 0.40 con recall 0.82 en clasificación individual — el modelo genera falsos positivos de melanoma, comportamiento clínicamente aceptable pero que refleja la dificultad de distinguir melanoma de nevus en imágenes ambiguas
+- La segmentación previa degrada la clasificación en el pipeline encadenado (ΔF1 -0.486) — EfficientNet usa el contexto de piel circundante como información diagnóstica, que se pierde al enmascarar el fondo
 
 ---
 
@@ -288,6 +301,7 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 - Tschandl et al. (2018). The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions. *Scientific Data*
 - Ronneberger et al. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. *MICCAI 2015*
 - Tan & Le (2019). EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks. *ICML 2019*
+- Hasan et al. (2020). The Effects of Skin Lesion Segmentation on the Performance of Dermatoscopic Image Classification. *arXiv:2008.12602*
 
 ---
 
