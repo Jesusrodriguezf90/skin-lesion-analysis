@@ -39,8 +39,8 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 
 - ✅ Exploración y análisis del dataset ISIC 2018 (notebook 01_eda)
 - ✅ Segmentación de lesiones con U-Net/ResNet34 y métricas Dice e IoU (notebook 02_segmentation)
-- 🔲 Clasificación multi-clase con EfficientNet-B0 sobre región segmentada (notebook 03_classification)
-- 🔲 Evaluación comparativa con métricas AUC, F1 y análisis de errores (notebook 04_evaluation)
+- ✅ Clasificación multi-clase con EfficientNet-B0 con fine-tuning progresivo (notebook 03_classification)
+- 🔲 Evaluación del pipeline completo con métricas conjuntas (notebook 04_evaluation)
 - ✅ Publicación de modelos en HF Hub
 - 🔲 Demo Gradio en HF Spaces
 
@@ -110,8 +110,8 @@ skin-lesion-analysis/
 ├── notebooks/
 │   ├── 01_eda.ipynb              # Exploración del dataset ISIC 2018
 │   ├── 02_segmentation.ipynb    # U-Net con ResNet34 encoder
-│   ├── 03_classification.ipynb  # EfficientNet sobre región segmentada
-│   └── 04_evaluation.ipynb      # Métricas Dice, IoU, AUC, F1
+│   ├── 03_classification.ipynb  # EfficientNet-B0 con fine-tuning progresivo
+│   └── 04_evaluation.ipynb      # Evaluación del pipeline completo
 │
 ├── src/
 │   ├── data/
@@ -210,10 +210,26 @@ Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura 
 |---|---|---|
 | Segmentación | Dice | **0.8982** |
 | Segmentación | IoU (Jaccard) | **0.8293** |
-| Clasificación | AUC | — |
-| Clasificación | F1 (macro) | — |
+| Clasificación | F1 macro | **0.7700** |
+| Clasificación | AUC macro | **0.9719** |
 
 > **Segmentación:** U-Net/ResNet34 entrenado con split 80/20, loss Dice+BCE, AdamW lr=1e-4, early stopping paciencia=5. Convergencia en época 7, early stopping en época 12. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/unet-resnet34-isic2018-segmentation).
+
+> **Clasificación:** EfficientNet-B0 entrenado con fine-tuning progresivo (5 épocas encoder congelado + 30 descongelado), WeightedRandomSampler + CrossEntropyLoss con pesos de clase para gestionar el desbalance severo (ratio 58.3x). Tres experimentos realizados — la configuración final usa `epochs_unfrozen=30` sin dropout adicional ni label smoothing, que demostró mejor generalización. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/efficientnet-b0-isic2018-classification).
+
+---
+
+## Proceso experimental — Clasificación
+
+El entrenamiento de EfficientNet-B0 requirió tres experimentos para determinar la configuración óptima:
+
+| Experimento | Cambios respecto al anterior | F1 macro | AUC |
+|---|---|---|---|
+| E1 — baseline | `epochs_unfrozen=20` | 0.7493 | 0.9704 |
+| E2 — regularización | + `drop_rate=0.2` + `label_smoothing=0.1` + `epochs_unfrozen=30` | ~0.50 | ~0.96 |
+| E3 — configuración final ✓ | Solo `epochs_unfrozen=30` | **0.7700** | **0.9719** |
+
+E2 demostró que combinar dropout adicional y label smoothing con un dataset fuertemente desbalanceado ralentiza la convergencia sin beneficio neto. E3 confirmó que el único cambio necesario era ampliar el margen de entrenamiento para que el early stopping pudiera actuar correctamente.
 
 ---
 
@@ -248,9 +264,9 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 | ✅ | Exploración del dataset (notebook 01_eda) |
 | ✅ | Segmentación U-Net (notebook 02_segmentation) |
 | ✅ | Publicación del modelo de segmentación en HF Hub |
-| 🔲 | Clasificación EfficientNet (notebook 03_classification) |
-| 🔲 | Evaluación comparativa (notebook 04_evaluation) |
-| 🔲 | Publicación del modelo de clasificación en HF Hub |
+| ✅ | Clasificación EfficientNet (notebook 03_classification) |
+| ✅ | Publicación del modelo de clasificación en HF Hub |
+| 🔲 | Evaluación del pipeline completo (notebook 04_evaluation) |
 | 🔲 | Demo Gradio en HF Spaces |
 
 ---
@@ -261,6 +277,8 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 - La escala física de la lesión en milímetros no se usa como feature — el modelo aprende patrones de textura, color y forma relativos a la imagen
 - El dataset ISIC 2018 está fuertemente desbalanceado — NV (nevus) representa el 66.9% de Task 3, mientras que DF (dermatofibroma) es solo el 1.1%
 - Task 1 y Task 3 son conjuntos disjuntos — U-Net y EfficientNet se entrenan con datos independientes sin solapamiento
+- La evaluación del pipeline completo (U-Net → EfficientNet encadenados) se realiza sobre el set de validación de Task 1, que U-Net ya vio durante el entrenamiento — no existe un dataset externo con imagen + máscara + etiqueta de las 7 clases fuera de ISIC 2018
+- MEL (melanoma) presenta precision 0.40 con recall 0.82 — el modelo genera falsos positivos de melanoma, comportamiento clínicamente aceptable (mejor sobrediagnosticar) pero que refleja la dificultad de distinguir melanoma de nevus en imágenes ambiguas
 
 ---
 
