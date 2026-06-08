@@ -42,7 +42,7 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 - ✅ Clasificación multi-clase con EfficientNet-B0 con fine-tuning progresivo (notebook 03_classification)
 - ✅ Evaluación del pipeline completo con análisis crítico (notebook 04_evaluation)
 - ✅ Publicación de modelos en HF Hub
-- 🔲 Demo Gradio en HF Spaces
+- ✅ Demo Gradio en HF Spaces
 
 ---
 
@@ -93,7 +93,7 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 | Clasificación | [timm](https://github.com/huggingface/pytorch-image-models) | EfficientNet-B0 con transfer learning |
 | Data augmentation | [Albumentations](https://albumentations.ai/) | Data augmentation de imágenes médicas |
 | Entrenamiento | [Kaggle Notebooks](https://www.kaggle.com/code) | GPU T4 gratuita para entrenamiento |
-| Demo | [Gradio](https://gradio.app/) + [HF Spaces](https://huggingface.co/spaces) | Interfaz interactiva pública |
+| Demo | [Gradio](https://gradio.app/) + [HF Spaces](https://huggingface.co/spaces/Jesusrodriguezf90/skin-lesion-analysis) | Interfaz interactiva pública |
 | CI/CD | [GitHub Actions](https://github.com/features/actions) | Tests automáticos en cada push |
 
 ---
@@ -214,6 +214,8 @@ Una vez descargados, coloca los archivos en `data/raw/` siguiendo la estructura 
 
 > **Segmentación:** U-Net/ResNet34 entrenado con split 80/20, loss Dice+BCE, AdamW lr=1e-4, early stopping paciencia=5. Convergencia en época 7, early stopping en época 12. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/unet-resnet34-isic2018-segmentation).
 
+🚀 **Demo interactiva:** [skin-lesion-analysis en HF Spaces](https://huggingface.co/spaces/Jesusrodriguezf90/skin-lesion-analysis) — pipeline U-Net → EfficientNet-B0 con ejemplos del dataset ISIC 2018 y opción de subir imagen propia.
+
 > **Clasificación:** EfficientNet-B0 entrenado con fine-tuning progresivo (5 épocas encoder congelado + 30 descongelado), WeightedRandomSampler + CrossEntropyLoss con pesos de clase para gestionar el desbalance severo (ratio 58.3x). Tres experimentos realizados — la configuración final usa `epochs_unfrozen=30` sin dropout adicional ni label smoothing, que demostró mejor generalización. Modelo publicado en [HF Hub](https://huggingface.co/Jesusrodriguezf90/efficientnet-b0-isic2018-classification).
 
 ### Evaluación del pipeline completo
@@ -280,7 +282,7 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 | ✅ | Evaluación del pipeline completo (notebook 04_evaluation) |
 | ✅ | Módulos reutilizables en src/ (data, models, utils) |
 | ✅ | Tests unitarios en tests/ |
-| 🔲 | Demo Gradio en HF Spaces |
+| ✅ | Demo Gradio en HF Spaces |
 
 ---
 
