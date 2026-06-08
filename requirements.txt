@@ -31,5 +31,8 @@ python-dotenv>=1.0.0
 # Cliente HF Hub
 huggingface_hub>=0.23.0
 
+# Desarrollo y testing
+pytest>=7.4.0
+
 # Demo
 gradio>=4.0.0

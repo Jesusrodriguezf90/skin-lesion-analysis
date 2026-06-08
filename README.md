@@ -124,8 +124,7 @@ skin-lesion-analysis/
 │   │   └── classification.py    # EfficientNet-B0 clasificador
 │   └── utils/
 │       ├── __init__.py
-│       ├── metrics.py           # Dice, IoU, AUC, F1
-│       └── visualization.py    # Visualización de máscaras y predicciones
+│       └── metrics.py           # Dice, IoU
 │
 ├── data/
 │   ├── raw/
@@ -138,10 +137,10 @@ skin-lesion-analysis/
 │   └── app.py                   # Demo Gradio en HF Spaces
 │
 ├── tests/
-│   ├── test_imports.py          # Tests de smoke — verificación del stack
-│   ├── test_dataset.py          # Tests unitarios de ISICDataset
-│   ├── test_segmentation.py     # Tests unitarios del modelo de segmentación
-│   └── test_classification.py  # Tests unitarios del modelo de clasificación
+│   ├── test_dataset.py          # Tests unitarios de ISICSegmentationDataset y HAM10000Dataset
+│   ├── test_segmentation.py     # Tests unitarios de build_unet()
+│   ├── test_classification.py  # Tests unitarios de build_efficientnet() y fine-tuning
+│   └── test_metrics.py          # Tests unitarios de dice_coefficient() e iou_coefficient()
 │
 ├── .env.example                 # Plantilla de variables de entorno
 ├── .gitignore
@@ -279,6 +278,8 @@ El dataset se utiliza exclusivamente con fines de investigación y desarrollo ba
 | ✅ | Clasificación EfficientNet (notebook 03_classification) |
 | ✅ | Publicación del modelo de clasificación en HF Hub |
 | ✅ | Evaluación del pipeline completo (notebook 04_evaluation) |
+| ✅ | Módulos reutilizables en src/ (data, models, utils) |
+| ✅ | Tests unitarios en tests/ |
 | 🔲 | Demo Gradio en HF Spaces |
 
 ---
