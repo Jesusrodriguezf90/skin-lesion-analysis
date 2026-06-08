@@ -29,19 +29,13 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install --upgrade pip
-          pip install pytest
-          # Build CPU-only — los tests no necesitan GPU y la build completa pesa ~2GB
+          # CPU-only torch — los tests no necesitan GPU y la build completa pesa ~2GB
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install \
-            segmentation-models-pytorch \
-            timm \
-            albumentations \
-            numpy \
-            Pillow \
-            opencv-python-headless \
-            scikit-learn \
-            python-dotenv \
-            huggingface_hub
+          # opencv-python-headless en lugar de opencv-python — CI no tiene display gráfico
+          pip install opencv-python-headless
+          # Instalar el resto de dependencias desde requirements.txt
+          # excluyendo torch, torchvision y opencv ya instalados arriba
+          grep -v -E "^(torch|torchvision|opencv-python)" requirements.txt | pip install -r /dev/stdin
 
       - name: Ejecutar tests unitarios
         env:
