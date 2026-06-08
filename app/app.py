@@ -77,15 +77,23 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406])
 IMAGENET_STD  = np.array([0.229, 0.224, 0.225])
 MEAN_IMG      = IMAGENET_MEAN * 255
 
-# Ejemplos del dataset ISIC 2018 — uno por clase clínica (mediana de cada clase)
+# Ejemplos del dataset ISIC 2018 — dos por clase clínica
+# Percentil 50 (caso típico) + percentil 25 (caso variable)
 EJEMPLOS = [
-    ["examples/ISIC_0030824.jpg"],  # MEL
-    ["examples/ISIC_0029186.jpg"],  # NV
-    ["examples/ISIC_0029123.jpg"],  # BCC
-    ["examples/ISIC_0028730.jpg"],  # AKIEC
-    ["examples/ISIC_0029217.jpg"],  # BKL
-    ["examples/ISIC_0029760.jpg"],  # DF
-    ["examples/ISIC_0029742.jpg"],  # VASC
+    ["examples/ISIC_0030824.jpg", "MEL — Melanoma (caso típico)"],
+    ["examples/ISIC_0027480.jpg", "MEL — Melanoma (caso variable)"],
+    ["examples/ISIC_0029186.jpg", "NV — Melanocytic nevus (caso típico)"],
+    ["examples/ISIC_0026741.jpg", "NV — Melanocytic nevus (caso variable)"],
+    ["examples/ISIC_0029123.jpg", "BCC — Basal cell carcinoma (caso típico)"],
+    ["examples/ISIC_0026957.jpg", "BCC — Basal cell carcinoma (caso variable)"],
+    ["examples/ISIC_0028730.jpg", "AKIEC — Actinic keratosis (caso típico)"],
+    ["examples/ISIC_0026466.jpg", "AKIEC — Actinic keratosis (caso variable)"],
+    ["examples/ISIC_0029217.jpg", "BKL — Benign keratosis (caso típico)"],
+    ["examples/ISIC_0026717.jpg", "BKL — Benign keratosis (caso variable)"],
+    ["examples/ISIC_0029760.jpg", "DF — Dermatofibroma (caso típico)"],
+    ["examples/ISIC_0026789.jpg", "DF — Dermatofibroma (caso variable)"],
+    ["examples/ISIC_0029742.jpg", "VASC — Vascular lesion (caso típico)"],
+    ["examples/ISIC_0026456.jpg", "VASC — Vascular lesion (caso variable)"],
 ]
 
 # ---------------------------------------------------------------------------
@@ -352,10 +360,15 @@ with gr.Blocks(title=TITULO) as demo:
             )
             analizar_btn = gr.Button("Analizar", variant="primary")
 
+            etiqueta_ejemplo = gr.Textbox(
+                label   = "Clase real del ejemplo seleccionado",
+                visible = True,
+                interactive = False,
+            )
             gr.Examples(
                 examples   = EJEMPLOS,
-                inputs     = imagen_input,
-                label      = "Ejemplos del dataset ISIC 2018 — un caso por clase clínica",
+                inputs     = [imagen_input, etiqueta_ejemplo],
+                label      = "Ejemplos del dataset ISIC 2018 — dos casos por clase clínica",
                 examples_per_page = 7,
             )
 
