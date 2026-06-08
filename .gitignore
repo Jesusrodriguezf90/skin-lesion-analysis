@@ -8,6 +8,8 @@ env/
 
 # Python
 __pycache__/
+*/__pycache__/
+*/*/__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -22,9 +24,13 @@ build/
 
 # Dataset ISIC 2018 — imágenes no distribuibles
 data/
+!src/data/
+!src/data/**
 
 # Modelos entrenados — artefactos pesados
 models/
+!src/models/
+!src/models/**
 checkpoints/
 *.pth
 *.pt
