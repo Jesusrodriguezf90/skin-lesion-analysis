@@ -136,6 +136,15 @@ skin-lesion-analysis/
 ├── app/
 │   └── app.py                   # Demo Gradio en HF Spaces
 │
+├── examples/
+│   ├── ISIC_0030824.jpg         # MEL — Melanoma
+│   ├── ISIC_0029186.jpg         # NV  — Melanocytic nevus
+│   ├── ISIC_0029123.jpg         # BCC — Basal cell carcinoma
+│   ├── ISIC_0028730.jpg         # AKIEC — Actinic keratosis
+│   ├── ISIC_0029217.jpg         # BKL — Benign keratosis
+│   ├── ISIC_0029760.jpg         # DF  — Dermatofibroma
+│   └── ISIC_0029742.jpg         # VASC — Vascular lesion
+│
 ├── tests/
 │   ├── test_dataset.py          # Tests unitarios de ISICSegmentationDataset y HAM10000Dataset
 │   ├── test_segmentation.py     # Tests unitarios de build_unet()
@@ -265,7 +274,10 @@ International Skin Imaging Collaboration (ISIC)
 
 **Condiciones de uso:**
 
-El dataset se utiliza exclusivamente con fines de investigación y desarrollo bajo los términos de uso de ISIC. Las imágenes no se distribuyen ni se incluyen en el repositorio — están excluidas del control de versiones mediante `.gitignore`.
+El dataset se utiliza exclusivamente con fines de investigación y desarrollo bajo los términos de uso de ISIC.
+Las imágenes de entrenamiento no se distribuyen ni se incluyen en el repositorio — están excluidas del control de versiones mediante `.gitignore`.
+
+Las 7 imágenes incluidas en `examples/` pertenecen al dataset ISIC 2018 (HAM10000) y están sujetas a la licencia [CC-BY-NC](https://challenge.isic-archive.com/data/#2018) — uso no comercial exclusivamente. Se incluyen únicamente con fines educativos y de demostración del portfolio.
 
 ---
 
