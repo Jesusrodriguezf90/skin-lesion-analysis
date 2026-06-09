@@ -309,7 +309,8 @@ Las 7 imágenes incluidas en `examples/` pertenecen al dataset ISIC 2018 (HAM100
 - La evaluación del pipeline encadenado usa pseudo-máscaras de U-Net sobre Task 3 — U-Net fue entrenado con Task 1, por lo que existe distribution shift entre los datos de entrenamiento de segmentación y los de evaluación
 - MEL (melanoma) presenta precision 0.40 con recall 0.82 en clasificación individual — el modelo genera falsos positivos de melanoma, comportamiento clínicamente aceptable pero que refleja la dificultad de distinguir melanoma de nevus en imágenes ambiguas
 - La segmentación previa degrada la clasificación en el pipeline encadenado (ΔF1 -0.486) — EfficientNet usa el contexto de piel circundante como información diagnóstica
-- La validación de imagen de entrada usa heurísticos simples (varianza de color y umbral de confianza del 30%) — imágenes inválidas con alta saturación pueden no ser detectadas — EfficientNet usa el contexto de piel circundante como información diagnóstica, que se pierde al enmascarar el fondo
+- La validación de imagen de entrada usa heurísticos simples (varianza de color, detección de píxeles artificiales y umbral de confianza del 30%) — imágenes inválidas con alta saturación pueden no ser detectadas 
+— EfficientNet usa el contexto de piel circundante como información diagnóstica, que se pierde al enmascarar el fondo
 
 ---
 

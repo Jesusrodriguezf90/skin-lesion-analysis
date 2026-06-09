@@ -85,6 +85,9 @@ UMBRAL_CONFIANZA   = 0.30
 # varianza muy baja entre canales — no puede ser una imagen dermoscópica válida
 VARIANZA_MIN_CANAL = 10.0   # std mínima por canal en espacio [0, 255]
 SATURACION_MIN     = 15.0   # saturación media mínima en espacio HSV
+# Solución 3: proporción máxima de píxeles artificiales permitida
+# Las imágenes reales del dataset tienen proporción 0.0000 — umbral conservador al 1%
+PROP_MAX_ARTIFICIAL = 0.01  # más del 1% de píxeles con canal saturado y resto oscuro
 
 # Ejemplos del dataset ISIC 2018 — dos por clase clínica
 # Percentil 50 (caso típico) + percentil 25 (caso variable)
@@ -318,6 +321,20 @@ def validar_imagen(img_np: np.ndarray) -> str | None:
         return (
             "⚠️ Imagen rechazada: la imagen tiene saturación de color insuficiente. "
             "Por favor sube una imagen dermoscópica capturada con dermatoscopio."
+        )
+
+    # Solución 3: detección de píxeles artificiales puros
+    # Colores como rojo puro (255,0,0) o verde puro (0,255,0) no existen
+    # en imágenes fotográficas reales — indican imagen sintética o fondo artificial
+    img_float   = img_np.astype(np.float32)
+    canal_max   = img_float.max(axis=2)
+    canal_min   = img_float.min(axis=2)
+    prop_artif  = ((canal_max > 250) & (canal_min < 30)).mean()
+    if prop_artif > PROP_MAX_ARTIFICIAL:
+        return (
+            "⚠️ Imagen rechazada: se detectaron colores artificiales incompatibles "
+            "con imágenes dermoscópicas reales. "
+            "Por favor sube una imagen capturada con dermatoscopio."
         )
 
     return None
