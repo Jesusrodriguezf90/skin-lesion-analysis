@@ -43,6 +43,7 @@ Cada modelo se entrena con su dataset específico del challenge ISIC 2018. En in
 - ✅ Evaluación del pipeline completo con análisis crítico (notebook 04_evaluation)
 - ✅ Publicación de modelos en HF Hub
 - ✅ Demo Gradio en HF Spaces
+- ✅ Validación de imagen de entrada — rechazo de imágenes no dermoscópicas
 
 ---
 
@@ -295,6 +296,7 @@ Las 7 imágenes incluidas en `examples/` pertenecen al dataset ISIC 2018 (HAM100
 | ✅ | Módulos reutilizables en src/ (data, models, utils) |
 | ✅ | Tests unitarios en tests/ |
 | ✅ | Demo Gradio en HF Spaces |
+| ✅ | Validación de imagen de entrada (varianza + umbral de confianza) |
 
 ---
 
@@ -306,7 +308,8 @@ Las 7 imágenes incluidas en `examples/` pertenecen al dataset ISIC 2018 (HAM100
 - Task 1 y Task 3 son conjuntos disjuntos — U-Net y EfficientNet se entrenan con datos independientes sin solapamiento
 - La evaluación del pipeline encadenado usa pseudo-máscaras de U-Net sobre Task 3 — U-Net fue entrenado con Task 1, por lo que existe distribution shift entre los datos de entrenamiento de segmentación y los de evaluación
 - MEL (melanoma) presenta precision 0.40 con recall 0.82 en clasificación individual — el modelo genera falsos positivos de melanoma, comportamiento clínicamente aceptable pero que refleja la dificultad de distinguir melanoma de nevus en imágenes ambiguas
-- La segmentación previa degrada la clasificación en el pipeline encadenado (ΔF1 -0.486) — EfficientNet usa el contexto de piel circundante como información diagnóstica, que se pierde al enmascarar el fondo
+- La segmentación previa degrada la clasificación en el pipeline encadenado (ΔF1 -0.486) — EfficientNet usa el contexto de piel circundante como información diagnóstica
+- La validación de imagen de entrada usa heurísticos simples (varianza de color y umbral de confianza del 30%) — imágenes inválidas con alta saturación pueden no ser detectadas — EfficientNet usa el contexto de piel circundante como información diagnóstica, que se pierde al enmascarar el fondo
 
 ---
 

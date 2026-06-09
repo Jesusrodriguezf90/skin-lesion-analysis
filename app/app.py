@@ -77,6 +77,15 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406])
 IMAGENET_STD  = np.array([0.229, 0.224, 0.225])
 MEAN_IMG      = IMAGENET_MEAN * 255
 
+# Umbrales de validación de imagen de entrada
+# Solución 1: umbral de confianza mínima — rechaza si ninguna clase supera el 30%
+UMBRAL_CONFIANZA   = 0.30
+# Solución 2: detección de imagen inválida — varianza mínima y saturación mínima
+# Una imagen monocromática (fondo rojo puro, imagen en blanco, etc.) tiene
+# varianza muy baja entre canales — no puede ser una imagen dermoscópica válida
+VARIANZA_MIN_CANAL = 10.0   # std mínima por canal en espacio [0, 255]
+SATURACION_MIN     = 15.0   # saturación media mínima en espacio HSV
+
 # Ejemplos del dataset ISIC 2018 — dos por clase clínica
 # Percentil 50 (caso típico) + percentil 25 (caso variable)
 EJEMPLOS = [
@@ -273,6 +282,48 @@ def visualizar_mascara(
 
 
 # ---------------------------------------------------------------------------
+# Validación de imagen de entrada
+# ---------------------------------------------------------------------------
+
+
+def validar_imagen(img_np: np.ndarray) -> str | None:
+    """Detecta imágenes inválidas antes de ejecutar el pipeline.
+
+    Combina dos estrategias complementarias:
+    - Solución 2: comprueba varianza por canal y saturación HSV mínimas
+      para rechazar imágenes monocromáticas o no fotográficas.
+    La confianza mínima (Solución 1) se aplica en predecir() tras la inferencia.
+
+    Args:
+        img_np: Array numpy (H, W, 3) uint8 RGB.
+
+    Returns:
+        Mensaje de error si la imagen es inválida, None si es válida.
+    """
+    import cv2
+
+    # Varianza por canal — una imagen monocromática tiene std muy baja
+    std_canales = img_np.std(axis=(0, 1))
+    if std_canales.max() < VARIANZA_MIN_CANAL:
+        return (
+            "⚠️ Imagen rechazada: la imagen parece ser monocromática o sintética. "
+            "Por favor sube una imagen dermoscópica capturada con dermatoscopio."
+        )
+
+    # Saturación HSV — imágenes dermoscópicas tienen saturación mínima
+    img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    hsv     = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+    saturacion_media = hsv[:, :, 1].mean()
+    if saturacion_media < SATURACION_MIN:
+        return (
+            "⚠️ Imagen rechazada: la imagen tiene saturación de color insuficiente. "
+            "Por favor sube una imagen dermoscópica capturada con dermatoscopio."
+        )
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Función principal de predicción — llamada por Gradio
 # ---------------------------------------------------------------------------
 
@@ -302,6 +353,13 @@ def predecir(imagen_input) -> tuple:
     else:
         img_pil = Image.fromarray(imagen_input).convert("RGB")
 
+    img_np_raw = np.array(img_pil.convert("RGB"))
+
+    # Solución 2: validar imagen antes de ejecutar el pipeline
+    error = validar_imagen(img_np_raw)
+    if error:
+        return None, {}, error, {}, error
+
     # Preprocesar
     img_np, tensor = preprocesar_imagen(img_pil)
 
@@ -310,14 +368,24 @@ def predecir(imagen_input) -> tuple:
 
     # Modo A — imagen completa → EfficientNet
     pred_a, probs_a = clasificar(tensor)
+    conf_a  = max(probs_a.values())
     clase_a = CLASES[pred_a]
-    texto_a = f"**{clase_a}** — {NOMBRES_CLASES[clase_a]}"
+    # Solución 1: umbral de confianza — rechaza si ninguna clase supera UMBRAL_CONFIANZA
+    if conf_a < UMBRAL_CONFIANZA:
+        texto_a = "⚠️ Confianza insuficiente — imagen posiblemente no dermoscópica"
+    else:
+        texto_a = f"**{clase_a}** — {NOMBRES_CLASES[clase_a]}"
 
     # Modo B — imagen enmascarada → EfficientNet
     tensor_masked   = aplicar_mascara(img_np, mask)
     pred_b, probs_b = clasificar(tensor_masked)
+    conf_b  = max(probs_b.values())
     clase_b = CLASES[pred_b]
-    texto_b = f"**{clase_b}** — {NOMBRES_CLASES[clase_b]}"
+    # Solución 1: umbral de confianza aplicado también al modo B
+    if conf_b < UMBRAL_CONFIANZA:
+        texto_b = "⚠️ Confianza insuficiente — imagen posiblemente no dermoscópica"
+    else:
+        texto_b = f"**{clase_b}** — {NOMBRES_CLASES[clase_b]}"
 
     # Visualización de la máscara
     img_mascara = visualizar_mascara(img_np, mask)
